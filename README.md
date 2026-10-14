@@ -25,7 +25,7 @@ Potrebno: Node.js 22.12+.
 ```bash
 cd client
 npm install
-npm start          # http://localhost:4200
+npm start          # http://localhost:4300
 npm run build      # produkcioni build u client/dist/client/browser
 ```
 
