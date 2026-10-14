@@ -1,0 +1,48 @@
+# Build i objava javnog sajta na Azure Static Web Apps (besplatni plan).
+# Pokreće se: posle izmene koda u client/, svake noći (da novi proizvodi i istekle akcije budu u HTML-u za Google)
+# i ručno iz GitHub-a (Actions → Objava sajta → Run workflow).
+name: Objava sajta
+
+on:
+  push:
+    branches: [main]
+    paths: ['client/**', '.github/workflows/sajt.yml']
+  schedule:
+    - cron: '0 2 * * *' # 03:00 / 04:00 po beogradskom vremenu
+  workflow_dispatch:
+
+jobs:
+  objava:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      # Prerender povlači proizvode iz API-ja. Besplatni API i baza "spavaju", pa ih prvo budimo.
+      - name: Buđenje API-ja
+        run: |
+          API=$(grep -oP "apiBase: '\K[^']+" client/src/environments/environment.ts)
+          for i in $(seq 1 12); do
+            if curl -sf --max-time 60 "$API/api/proizvodi" > /dev/null; then echo "API radi"; exit 0; fi
+            echo "API još ne odgovara, pokušaj $i/12…"; sleep 15
+          done
+          echo "::warning::API nije odgovorio — sajt se objavljuje bez proizvoda u HTML-u (učitaće se u browseru)."
+
+      - name: Build
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: client/dist/client/browser
+          skip_app_build: true
+          skip_api_build: true

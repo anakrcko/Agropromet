@@ -1,0 +1,9 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.csr.html",
+    "exclude": ["/images/*", "/*.{css,js,svg,png,jpg,jpeg,webp,ico,txt,xml,json,woff,woff2}"]
+  },
+  "routes": [
+    { "route": "/admin*", "headers": { "X-Robots-Tag": "noindex" } }
+  ]
+}

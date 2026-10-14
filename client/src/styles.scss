@@ -1,0 +1,135 @@
+/*
+ * Vizuelni identitet Agropromet — sve boje i fontovi na jednom mestu.
+ *
+ * Napomena o kontrastu (WCAG AA, 4.5:1): terakota #B85C38 na pozadini #F7F2E6 ima kontrast ~4.1:1,
+ * a svetli tekst na terakota dugmetu ~4.4:1. Za tekst i dugmad se zato koristi malo tamnija
+ * nijansa (--terakota-tekst). Isto važi za prigušeni tekst na bež pozadini (--tekst-priguseni-na-pozadini).
+ */
+:root {
+  --pozadina: #f7f2e6;
+  --kartica: #fffcf4;
+  --linija: #ded3b8;
+  --linija-cip: #dbcfb0;
+  --placeholder: #efe6ce;
+
+  --zelena: #33523b;
+  --zelena-tamnija: #2c4a33;
+
+  --terakota: #b85c38;
+  --terakota-tekst: #a5502f;
+  --terakota-hover: #99462a;
+
+  --zlatna: #f0c242;
+  --zlatna-tamnija: #e8b22a;
+
+  --tekst: #24211c;
+  --tekst-sekundarni: #4a4438;
+  --tekst-priguseni: #7a7263;
+  --tekst-priguseni-na-pozadini: #6e675a;
+  --tekst-oznaka: #6f6346;
+
+  --font-naslov: 'Bitter', Georgia, serif;
+  --font-tekst: 'Karla', system-ui, sans-serif;
+  --font-logo: 'Archivo', 'Karla', sans-serif;
+
+  --max-sirina: 1180px;
+  --radius: 12px;
+  --radius-veliki: 16px;
+  --fokus: 0 0 0 3px var(--pozadina), 0 0 0 5px var(--zelena);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--pozadina);
+  color: var(--tekst);
+  font-family: var(--font-tekst);
+  line-height: 1.4;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-naslov);
+  text-wrap: pretty;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--terakota-tekst);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--terakota-hover);
+  text-decoration: underline;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Vidljiv fokus za tastaturu na svim interaktivnim elementima. */
+:focus-visible {
+  outline: 3px solid var(--zelena);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.preskoci-na-sadrzaj {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--zelena);
+  color: var(--pozadina);
+  font-weight: 700;
+}
+
+.preskoci-na-sadrzaj:focus {
+  top: 12px;
+  color: var(--pozadina);
+}

@@ -1,0 +1,21 @@
+# Tajne
+.env
+
+# .NET
+server/bin/
+server/obj/
+*.user
+.vs/
+
+# Slike koje vlasnik otprema kroz admin (čuvaju se na serveru, ne u repou)
+server/wwwroot/images/products/*
+!server/wwwroot/images/products/.gitkeep
+
+# Angular (dopuna client/.gitignore)
+client/node_modules/
+client/dist/
+client/.angular/
+
+# OS / editor
+Thumbs.db
+.DS_Store
