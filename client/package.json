@@ -2,8 +2,10 @@
   "name": "client",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng",
+    "sadrzaj": "node scripts/pripremi-sadrzaj.mjs",
+    "prestart": "npm run sadrzaj",
     "start": "ng serve",
+    "prebuild": "npm run sadrzaj",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -15,7 +17,7 @@
     "@angular/core": "^21.2.0",
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
-    "@angular/platform-server": "^21.2.0",
+    "@angular/platform-server": "^21.2.25",
     "@angular/router": "^21.2.0",
     "@angular/ssr": "^21.2.26",
     "rxjs": "~7.8.0",
@@ -27,6 +29,10 @@
     "@angular/compiler-cli": "^21.2.0",
     "@types/node": "^20.17.19",
     "prettier": "^3.8.1",
+    "sharp": "^0.35.5",
     "typescript": "~5.9.2"
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

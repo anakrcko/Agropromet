@@ -3,11 +3,14 @@ import { Component, DOCUMENT, DestroyRef, afterNextRender, computed, inject, sig
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, catchError, map, of } from 'rxjs';
+import { map } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiService } from '../core/api.service';
-import { Akcija, Kategorija, Proizvod } from '../core/models';
-import { RADNJA, otvorenoSada } from '../core/site';
+import sadrzajJson from '../../generated/sadrzaj.json';
+import { Kategorija, Sadrzaj } from '../core/models';
+import { RADNJA, danasUBeogradu, otvorenoSada } from '../core/site';
+
+/** Sadržaj iz /content, ugrađen u sajt tokom builda (scripts/pripremi-sadrzaj.mjs). */
+const SADRZAJ = sadrzajJson as Sadrzaj;
 
 const OPIS =
   'Poljoprivredna apoteka Agropromet u Ribaru: semena, zaštita bilja, đubriva, sadni materijal, ' +
@@ -21,23 +24,22 @@ const OPIS =
   host: { '(click)': 'naSidro($event)' },
 })
 export class Home {
-  private api = inject(ApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private dokument = inject(DOCUMENT);
 
   readonly radnja = RADNJA;
   readonly godina = new Date().getFullYear();
-
-  readonly kategorije = signal<Kategorija[]>([]);
-  readonly proizvodi = signal<Proizvod[]>([]);
-  readonly akcije = signal<Akcija[]>([]);
+  readonly sezona = SADRZAJ.sezona;
+  readonly kategorije = SADRZAJ.kategorije;
+  readonly proizvodi = SADRZAJ.proizvodi;
 
   /**
-   * Filter iz URL-a se primenjuje tek posle hidracije, da bi prvi render u browseru bio isti
-   * kao prerenderovan HTML (koji uvek prikazuje sve proizvode).
+   * Filter iz URL-a i današnji datum primenjuju se tek posle hidracije, da bi prvi render u browseru bio isti
+   * kao prerenderovan HTML (svi proizvodi, akcije važeće na dan builda).
    */
   private readonly hidrirano = signal(false);
+  private readonly danas = signal(SADRZAJ.generisano);
   private readonly slugIzUrl = toSignal(this.route.queryParamMap.pipe(map((q) => q.get('kategorija'))), {
     initialValue: null,
   });
@@ -45,20 +47,25 @@ export class Home {
   readonly izabrana = computed<Kategorija | null>(() => {
     if (!this.hidrirano()) return null;
     const slug = this.slugIzUrl();
-    return this.kategorije().find((k) => k.slug === slug) ?? null;
+    return this.kategorije.find((k) => k.slug === slug) ?? null;
   });
 
   readonly vidljivi = computed(() => {
     const k = this.izabrana();
-    const svi = this.proizvodi();
-    return k ? svi.filter((p) => p.kategorijaId === k.id) : svi;
+    return k ? this.proizvodi.filter((p) => p.kategorija === k.slug) : this.proizvodi;
   });
 
   readonly opisRezultata = computed(() => {
     const k = this.izabrana();
     return k
       ? `${this.vidljivi().length} u kategoriji „${k.naziv}“`
-      : `${this.proizvodi().length} grupa proizvoda — izaberite kategoriju`;
+      : `${this.proizvodi.length} grupa proizvoda — izaberite kategoriju`;
+  });
+
+  /** Akcije koje važe danas (prazan datum = bez ograničenja). */
+  readonly akcije = computed(() => {
+    const d = this.danas();
+    return SADRZAJ.akcije.filter((a) => (!a.vaziOd || a.vaziOd <= d) && (!a.vaziDo || a.vaziDo >= d));
   });
 
   /** null dok se ne izračuna u browseru (prerender ne zna trenutno vreme posetioca). */
@@ -74,20 +81,18 @@ export class Home {
     meta.updateTag({ property: 'og:title', content: 'Agropromet — poljoprivredna apoteka, Ribare' });
     meta.updateTag({ property: 'og:description', content: OPIS });
     meta.updateTag({ property: 'og:image', content: `${environment.siteUrl}/images/hero-radnja.jpg` });
-    if (environment.siteUrl) meta.updateTag({ property: 'og:url', content: `${environment.siteUrl}/` });
+    meta.updateTag({ property: 'og:url', content: `${environment.siteUrl}/` });
     meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-    meta.removeTag("name='robots'"); // admin postavlja noindex
-
-    this.ucitaj(false);
 
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       this.hidrirano.set(true);
-      // Ako prerender nije imao pristup API-ju, podaci se dovlače ponovo u browseru.
-      if (!this.proizvodi().length || !this.kategorije().length) this.ucitaj(true);
-
-      this.otvoreno.set(otvorenoSada());
-      const interval = setInterval(() => this.otvoreno.set(otvorenoSada()), 60_000);
+      const osvezi = () => {
+        this.danas.set(danasUBeogradu());
+        this.otvoreno.set(otvorenoSada());
+      };
+      osvezi();
+      const interval = setInterval(osvezi, 60_000);
       destroyRef.onDestroy(() => clearInterval(interval));
     });
   }
@@ -116,16 +121,5 @@ export class Home {
     if (!cilj.hasAttribute('tabindex')) cilj.setAttribute('tabindex', '-1');
     cilj.focus({ preventScroll: true });
     history.replaceState(history.state, '', `${location.pathname}${location.search}${href}`);
-  }
-
-  slika(p: Proizvod) {
-    return this.api.slikaUrl(p.slikaUrl);
-  }
-
-  private ucitaj(osvezi: boolean) {
-    const tihoPrazno = <T>(o: Observable<T[]>) => o.pipe(catchError(() => of([] as T[])));
-    tihoPrazno(this.api.kategorije(osvezi)).subscribe((k) => this.kategorije.set(k));
-    tihoPrazno(this.api.proizvodi(undefined, osvezi)).subscribe((p) => this.proizvodi.set(p));
-    tihoPrazno(this.api.akcije(osvezi)).subscribe((a) => this.akcije.set(a));
   }
 }

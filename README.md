@@ -1,219 +1,131 @@
 # Agropromet — sajt poljoprivredne apoteke (Ribare)
 
-Prezentacioni sajt sa ponudom proizvoda (bez cena i korpe) i admin delom za vlasnika.
+Prezentacioni sajt sa ponudom proizvoda (bez cena i korpe). Potpuno besplatan za održavanje: nema servera ni baze.
 
-| Deo | Tehnologija | Folder |
+```
+vlasnik ──► Pages CMS (app.pagescms.org) ──► GitHub repo (/content) ──► Cloudflare Pages build ──► agropromet.rs
+             forma: proizvodi, slike, akcije    JSON fajlovi + slike         ~1–2 min                  statičan sajt
+```
+
+| Deo | Tehnologija | Gde |
 |---|---|---|
-| Javni sajt + admin | Angular 21 (standalone, signals, SCSS, prerender) | `client/` |
-| API | ASP.NET Core Web API (.NET 10), EF Core, SQL Server | `server/` |
-| Baza za razvoj | LocalDB ili Docker (`docker-compose.yml`) | — |
+| Sajt | Angular 21 (standalone, signals, SCSS), prerender početne strane | `client/` |
+| Sadržaj | JSON fajlovi i slike | `content/` |
+| Admin | Pages CMS (besplatan, prijava preko GitHub naloga) | `.pages.yml` |
+| Hosting | Cloudflare Pages (Free) | — |
+
+> Prethodna verzija sa .NET API-jem, SQL Serverom i Angular adminom sačuvana je u git grani `dotnet-verzija`.
 
 ---
 
 ## 1. Lokalno pokretanje
 
-### Potrebno
-- .NET SDK 10
-- Node.js 22.12+ (Angular 21). Za Angular 22 potreban je Node 22.22+.
-- SQL Server: **LocalDB** (dolazi uz Visual Studio) **ili** Docker Desktop.
+Potrebno: Node.js 22.12+.
 
-### 1.1 Baza
-
-**Varijanta A — LocalDB (podrazumevano).** Ništa se ne podešava; konekcija je već u `server/appsettings.Development.json`:
-```
-Server=(localdb)\MSSQLLocalDB;Database=Agropromet;...
-```
-
-**Varijanta B — Docker.**
-```bash
-cp .env.example .env          # pa promeniti lozinku u .env
-docker compose up -d
-```
-Zatim u `server/` postaviti konekciju (preko user-secrets, da lozinka ne bi bila u repou):
-```bash
-cd server
-dotnet user-secrets set "ConnectionStrings:Agropromet" "Server=localhost,1433;Database=Agropromet;User Id=sa;Password=<lozinka iz .env>;TrustServerCertificate=True"
-```
-
-### 1.2 Migracije
-```bash
-cd server
-dotnet tool restore
-dotnet ef database update
-```
-Migracija pravi tabele `Kategorije`, `Proizvodi`, `Akcije` i ubacuje početne podatke iz dizajna (8 kategorija, 24 proizvoda, 3 akcije).
-U razvoju se migracije primenjuju i same pri pokretanju API-ja (`Baza:PrimeniMigracijePriPokretanju`).
-
-### 1.3 Nalog vlasnika (admin)
-Postoji jedan korisnik. Lozinka se nigde ne čuva u čistom obliku — u konfiguraciju ide samo heš:
-```bash
-cd server
-dotnet run -- hash-lozinku "OvdeIzaberiteJakuLozinku"
-# ispisuje heš, npr. AQAAAAIAAYag...
-
-dotnet user-secrets set "Admin:KorisnickoIme" "vlasnik"
-dotnet user-secrets set "Admin:LozinkaHash" "<heš iz prethodne komande>"
-```
-Dok ovo nije podešeno, prijava vraća 503.
-
-### 1.4 API
-```bash
-cd server
-dotnet run
-```
-API radi na **http://localhost:5155** (npr. http://localhost:5155/api/proizvodi). U razvoju je dostupan i OpenAPI opis na `/openapi/v1.json`.
-
-### 1.5 Angular
 ```bash
 cd client
 npm install
-npm start
+npm start          # http://localhost:4200
+npm run build      # produkcioni build u client/dist/client/browser
 ```
-Sajt: **http://localhost:4200**, admin: **http://localhost:4200/admin**.
 
-> Ako `npm`/`npx` prijavi čudne greške (stari globalni npm), pozvati npm koji dolazi uz Node:
-> `node "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js" install`
+Pre svakog `start`/`build` automatski se pokreće `scripts/pripremi-sadrzaj.mjs`, koja:
+- čita `content/` i proverava sadržaj (greške ispisuje kao `UPOZORENJE`, ali ne prekida build),
+- smanjuje slike na najviše 1200 px i pretvara ih u WebP (`sharp`), sa hešom u imenu fajla,
+- pravi `client/src/generated/sadrzaj.json` koji se ugrađuje u stranu (prerender — Google vidi sve proizvode).
 
-Produkcioni build (`npm run build`) **prerenderuje početnu stranu** sa podacima iz API-ja, pa API mora da radi tokom builda.
-Ako API nije dostupan, build prolazi, a podaci se učitavaju u browseru.
-
----
-
-## 2. Javni API
-
-| Metod | Putanja | Opis |
-|---|---|---|
-| GET | `/api/kategorije` | sve kategorije, po redosledu |
-| GET | `/api/proizvodi?kategorija={slug}` | aktivni proizvodi (opciono po kategoriji) |
-| GET | `/api/akcije` | samo aktivne akcije koje važe danas (po beogradskom vremenu) |
-
-Admin rute (potreban JWT): `POST /api/auth/login`, CRUD za `/api/proizvodi`, `/api/kategorije`, `/api/akcije`,
-`PATCH /api/proizvodi/{id}/aktivan`, `POST /api/proizvodi/{id}/slika` (polje `slika`, do 15 MB; čuva se kao WebP 1200 px u `wwwroot/images/products/`).
+Posle izmene u `content/` lokalno, ponovo pokrenuti `npm start`.
 
 ---
 
-## 3. Dodavanje proizvoda kroz admin
+## 2. Sadržaj (`content/`)
 
-1. Otvoriti `/admin` i prijaviti se korisničkim imenom i lozinkom vlasnika.
-2. **Proizvodi → + Novi proizvod.**
-3. Upisati **naziv**, izabrati **kategoriju**, upisati kratak **opis** (prikazuje se na kartici).
-4. Po želji izabrati **sliku** (JPG/PNG/WebP). Pregled se vidi odmah; slika se automatski smanjuje i pretvara u WebP.
-   Proizvod bez slike na sajtu dobija bež polje sa nazivom.
-5. **Sačuvaj.** Proizvod se odmah vidi na API-ju; na sajtu posle osvežavanja strane.
-6. Proizvod koji privremeno nema na stanju **ne treba brisati** — dovoljno je na listi isključiti prekidač **Aktivan**.
+| Fajl | Šta je u njemu |
+|---|---|
+| `content/proizvodi/*.json` | jedan fajl po proizvodu: `naziv`, `kategorija` (slug), `opis`, `slika`, `aktivan`, `istaknut`, `redosled` |
+| `content/kategorije.json` | kategorije (filteri) — redosled u fajlu je redosled na sajtu |
+| `content/akcije.json` | natpis sezone i lista akcija (`oznaka` Akcija/Novo/Uskoro, `naslov`, `tekst`, `vaziOd`, `vaziDo`, `aktivna`) |
+| `content/slike/` | originalne slike koje vlasnik otpremi (na sajt idu optimizovane kopije) |
 
-Akcije (Akcija / Novo / Uskoro) se dodaju u **Akcije**, sa datumima „važi od / do“. Kada nijedna akcija ne važi, zeleni blok na sajtu se ne prikazuje.
-
-> Javna strana je prerenderovana u trenutku builda. Sajt se automatski ponovo objavljuje **svake noći** (GitHub Actions),
-> pa se novi proizvodi i promene akcija vide na sajtu najkasnije sledećeg jutra.
-> Za odmah: GitHub → **Actions → Objava sajta → Run workflow** (oko 3 minuta).
+- Proizvod sa `aktivan: false` se ne prikazuje (ne treba ga brisati kad ga privremeno nema).
+- Akcija se prikazuje samo ako je aktivna i današnji datum (Beograd) je u periodu važenja; prazan datum = bez ograničenja.
+  Datum se proverava i u browseru, pa istekla akcija nestaje istog dana bez novog builda.
+- **Nova kategorija:** dodati je u `content/kategorije.json` **i** u listu `kategorija` u `.pages.yml` (ista `name`/`slug` vrednost).
+  Ovo radi neko ko održava sajt, ne kroz admin.
 
 ---
 
-## 4. Objavljivanje — besplatna varijanta
+## 3. Uputstvo za vlasnika — dodavanje proizvoda
 
-| Šta | Usluga (besplatni plan) | Adresa |
-|---|---|---|
-| Javni sajt + admin | Azure Static Web Apps — Free | `https://agropromet.rs` (i `www.agropromet.rs`) |
-| API + slike proizvoda | Azure App Service — F1 (Free) | `https://<ime>.azurewebsites.net` |
-| Baza | Azure SQL Database — besplatna ponuda | — |
-| DNS | Cloudflare — Free | — |
-| Build i objava sajta | GitHub (privatni repo) + GitHub Actions | — |
+1. Otvoriti **https://app.pagescms.org** i prijaviti se GitHub nalogom (**Sign in with GitHub**).
+2. Izabrati repo sajta. Levo su **Proizvodi** i **Akcije i novo u ponudi**.
+3. **Proizvodi →** dugme za novi unos:
+   - **Naziv**, **Kategorija**, **Kratak opis**,
+   - **Slika** — otpremiti fotografiju sa telefona ili računara (bilo koje veličine; sajt je sam smanjuje),
+   - **Prikazuj na sajtu** — uključeno.
+4. **Save.** Posle 1–2 minuta proizvod je na sajtu (osvežiti stranu).
+5. Kada proizvoda privremeno nema — otvoriti ga i isključiti **Prikazuj na sajtu**, pa **Save**.
 
-**Ograničenja besplatnih planova** (za radnju ove veličine dovoljno je, ali treba ih znati):
-- F1 API „zaspi“ posle ~20 min bez poseta; prvi zahtev posle toga traje 10–30 s (prvo otvaranje admina, prve slike).
-- F1: 60 min procesorskog vremena dnevno i ograničen saobraćaj (oko 165 MB dnevno) — slike se keširaju u browseru, ali ako sajt postane jako posećen, prelazi se na plan B1 (~13 €/mesečno).
-- F1 ne podržava sopstveni domen, pa API ostaje na `*.azurewebsites.net` adresi (posetioci to ne vide).
-- Besplatna baza ima 100.000 vCore-sekundi mesečno; gasi se kada miruje i budi se pri prvom upitu (API ponavlja upit dok se ne probudi).
-  Sajt bazu koristi samo pri noćnom buildu i radu u adminu, pa limit nije problem.
-- Azure nalog traži platnu karticu radi provere identiteta; uz izbore ispod ništa se ne naplaćuje.
+**Akcije:** **Akcije i novo u ponudi** → dodati stavku u listu, popuniti oznaku, naslov, tekst i datume → **Save**.
+Kada nijedna akcija ne važi, zeleni blok na sajtu se ne prikazuje.
 
-### 4.1 Azure nalog
-1. Napraviti nalog na https://azure.microsoft.com/free.
-2. U portalu (portal.azure.com) napraviti **Resource group** `agropromet`, region **West Europe**. Sve ispod ide u nju.
+---
 
-### 4.2 Baza (Azure SQL, besplatno)
-1. **Create → Azure SQL → SQL databases → Single database.**
-2. Na vrhu forme kliknuti **Apply offer** (Free Azure SQL Database offer).
-3. Server: **Create new** → ime npr. `agropromet-sql`, autentifikacija **SQL authentication**, upisati admin korisnika i jaku lozinku (sačuvati ih).
-4. Baza: ime `Agropromet`. **Behavior when free limit reached: Auto-pause the database until next month** — ovo garantuje da nema naplate.
-5. **Networking:** *Public endpoint*, **Allow Azure services and resources to access this server: Yes**.
-6. Posle kreiranja: baza → **Connection strings → ADO.NET (SQL authentication)** — kopirati i u njoj zameniti `{your_password}`.
+## 4. Objavljivanje (jednom)
 
-### 4.3 API (App Service F1, besplatno)
-1. **Create → Web App.** Ime npr. `agropromet-api`, *Publish: Code*, *Runtime: .NET 10*, *OS: Windows*, region West Europe.
-   **Pricing plan → Free F1.**
-2. Posle kreiranja, na **Overview** prepisati **Default domain** (npr. `agropromet-api-xxxx.westeurope-01.azurewebsites.net`).
-3. Lokalno napraviti tajne:
+### 4.1 GitHub
+1. Napraviti **privatni** repo (npr. `agropromet-sajt`) i poslati granu `main`:
    ```bash
-   cd server
-   dotnet run -- hash-lozinku "LozinkaVlasnika"   # heš lozinke za admin
-   openssl rand -base64 48                        # JWT ključ (Git Bash)
+   git remote add origin https://github.com/<nalog>/agropromet-sajt.git
+   git push -u origin main
    ```
-4. Web App → **Settings → Environment variables** → dodati (pa **Apply**):
-   ```
-   ConnectionStrings__Agropromet        = <konekcija iz 4.2, sa lozinkom>
-   Jwt__Kljuc                           = <izlaz openssl komande>
-   Admin__KorisnickoIme                 = vlasnik
-   Admin__LozinkaHash                   = <heš iz hash-lozinku>
-   Baza__PrimeniMigracijePriPokretanju  = true
-   ```
-   Domeni sajta za CORS su već u `appsettings.json`. Za probu pre podešavanja domena dodati i
-   `Cors__DozvoljeniDomeni__2 = https://<ime>.azurestaticapps.net` (adresa iz 4.4).
-5. Objava iz VS Code-a: ekstenzija **Azure App Service** → desni klik na folder `server` → **Deploy to Web App…** → izabrati `agropromet-api`.
-6. Provera: `https://<default domain>/api/proizvodi` vraća listu proizvoda (prvi put može da traje do minut — baza se pravi i puni).
-7. U `client/src/environments/environment.ts` upisati tu adresu u `apiBase` (bez `/` na kraju).
+2. Vlasniku (ako ima svoj GitHub nalog) dati pristup: repo → **Settings → Collaborators → Add people**.
 
-API se ponovo objavljuje samo kada se menja kod u `server/` — proizvodi, slike i akcije se menjaju kroz admin.
+### 4.2 Cloudflare Pages
+1. Nalog na **cloudflare.com** (besplatan, bez kartice).
+2. **Workers & Pages → Create → Pages → Connect to Git** → povezati GitHub i izabrati repo.
+3. Podešavanja builda:
 
-### 4.4 Sajt (Static Web Apps, besplatno)
-1. Kod staviti na GitHub u **privatni** repo, grana `main`.
-2. Azure: **Create → Static Web App.** Ime `agropromet-sajt`, *Plan: Free*, **Deployment source: Other**.
-3. Static Web App → **Overview → Manage deployment token** → kopirati.
-4. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**:
-   ime `AZURE_STATIC_WEB_APPS_API_TOKEN`, vrednost = token.
-5. GitHub → **Actions → Objava sajta → Run workflow.** Workflow (`.github/workflows/sajt.yml`) budi API, pravi build i objavljuje sajt.
-   Posle toga se pokreće sam: na svaku izmenu u `client/` i svake noći.
-6. Provera na adresi `https://<ime>.azurestaticapps.net`.
+   | Polje | Vrednost |
+   |---|---|
+   | Production branch | `main` |
+   | Framework preset | `None` |
+   | Build command | `npm run build` |
+   | Build output directory | `dist/client/browser` |
+   | Root directory (Advanced) | `client` |
+   | Environment variable | `NODE_VERSION` = `22` |
 
-### 4.5 Domen agropromet.rs (Cloudflare DNS, besplatno)
-Glavni domen bez `www` traži „CNAME na vrhu domena“, što Cloudflare podržava besplatno (a većina .rs registara ne).
-1. Nalog na cloudflare.com → **Add a domain** → `agropromet.rs` → plan **Free**.
-2. Cloudflare prikaže dva nameservera. Kod registra kod kog je kupljen domen, u podešavanjima domena, zameniti nameservere tim vrednostima.
-   Aktivacija traje od nekoliko minuta do 24 h; Cloudflare javlja mejlom.
-3. Azure → Static Web App → **Custom domains → Add → Custom domain on other DNS**:
-   - `agropromet.rs` — tip validacije **TXT**; Azure prikaže vrednost → u Cloudflare dodati **TXT** zapis `@` sa tom vrednošću.
-     Zatim u Cloudflare: **CNAME** `@` → `<ime>.azurestaticapps.net`.
-   - `www.agropromet.rs` — u Cloudflare: **CNAME** `www` → `<ime>.azurestaticapps.net`, pa dodati domen u Azure.
-   - Kod oba CNAME zapisa u Cloudflare isključiti proxy (**siva oblačić ikonica — DNS only**), da bi Azure mogao da izda HTTPS sertifikat.
-4. Posle validacije Azure sam izdaje besplatan HTTPS sertifikat (do sat vremena).
-5. Opciono: u Static Web App → Custom domains postaviti `agropromet.rs` kao **default**.
+4. **Save and Deploy.** Sajt je na `https://<ime-projekta>.pages.dev`.
+   Svaki commit na `main` (i svaka izmena iz Pages CMS-a) automatski pravi novi build.
 
-### 4.6 Posle objave
-- **Google Search Console** (search.google.com/search-console): dodati domen `agropromet.rs` (verifikacija TXT zapisom u Cloudflare) i poslati `https://agropromet.rs/sitemap.xml`.
+### 4.3 Pages CMS
+1. **https://app.pagescms.org → Sign in with GitHub**, pa odobriti pristup repou (instalira se GitHub aplikacija „Pages CMS“; izabrati samo ovaj repo).
+2. Otvoriti repo i proveriti da se vide **Proizvodi** i **Akcije**.
+
+### 4.4 Domen agropromet.rs (registrovan kod Loopia)
+1. U Cloudflare: **Add a domain** → `agropromet.rs` → plan **Free**. Cloudflare preuzme postojeće DNS zapise i prikaže **dva nameservera**.
+2. Kod Loopie (Customer Zone → domen → nameserveri) zameniti Loopia nameservere tim dvema vrednostima. Aktivacija: od nekoliko minuta do 24 h.
+   - Ako na domenu postoji mejl ili drugi servisi, pre promene proveriti da su njihovi zapisi (MX, TXT…) preneti u Cloudflare DNS.
+3. Kad je domen aktivan: **Workers & Pages → projekat → Custom domains → Set up a custom domain** → `agropromet.rs`, pa isto za `www.agropromet.rs`.
+   Cloudflare sam dodaje DNS zapise i HTTPS sertifikat.
+4. Preusmerenje `www` → bez `www`: **Rules → Redirect Rules → Create rule → šablon „Redirect from WWW to root“**.
+
+### 4.5 Posle objave
+- **Google Search Console**: dodati `agropromet.rs` (Domain property, verifikacija TXT zapisom u Cloudflare) i poslati `https://agropromet.rs/sitemap.xml`.
 - **Google Business profil** radnje: upisati sajt `https://agropromet.rs`.
-- Prijaviti se na `https://agropromet.rs/admin` i proveriti dodavanje proizvoda sa slikom.
-
-### 4.7 Alternativa: sopstveni Windows server (IIS)
-- **API:** instalirati *ASP.NET Core Hosting Bundle* (.NET 10), `dotnet publish -c Release -o C:\inetpub\agropromet-api`, App Pool *No Managed Code*,
-  podešavanja iz 4.3 kao promenljive okruženja; nalogu App Pool-a dati pravo pisanja na `wwwroot\images\products`.
-- **Sajt:** sadržaj `client/dist/client/browser` u folder sajta; potreban modul **URL Rewrite** (`web.config` je već u buildu).
 
 ---
 
 ## 5. Napomene
 
-- **Obrada slika** koristi SkiaSharp (MIT licenca — besplatno i za komercijalnu upotrebu, bez licencnog ključa).
-  Sva obrada je u `server/Services/Services.cs` (`ImageService`).
 - **Kontrast (WCAG AA).** Neke boje iz dizajna su malo potamnjene samo tamo gde tekst nije imao kontrast 4.5:1:
   terakota za tekst i dugmad `#A5502F` (umesto `#B85C38`), prigušeni tekst na bež pozadini `#6E675A`, oznaka kategorije `#6F6346`, oznaka akcije `#EBBE9A`.
   Sve boje su na jednom mestu: `client/src/styles.scss`.
 - **Telefon link** je `tel:+38135273010` (u dizajnu je bilo `+381035…`, što nije ispravan međunarodni format).
-- **Bezbednost:** prijava je ograničena na 10 pokušaja u minuti; JWT važi 12 h; CORS dozvoljava samo domene iz `Cors:DozvoljeniDomeni`.
+- **Podaci o radnji** (adresa, telefon, radno vreme) su u `client/src/app/core/site.ts` i u JSON-LD bloku u `client/src/index.html`.
 
 ### Šta još fali (TODO)
 - Fotografija za sekciju „O nama“ — u dizajnu je samo prazno mesto (`client/src/app/public/home.html`).
 - Tačni datumi sezone kada se radi do 17h — indikator „Sada otvoreno“ koristi redovno radno vreme (`client/src/app/core/site.ts`).
-- Datumi važenja početnih akcija (u bazi su bez ograničenja) i tekst „Sezona: jesen 2026.“ (`site.ts`).
-- Slike proizvoda — dodaju se kroz admin.
-- `docker-compose.yml` nije testiran na ovoj mašini (Docker nije instaliran).
+- Datumi važenja početnih akcija (sada su bez ograničenja) — vlasnik ih postavlja kroz admin.
+- Slike proizvoda — vlasnik ih dodaje kroz admin.

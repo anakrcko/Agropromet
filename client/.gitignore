@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Generiše scripts/pripremi-sadrzaj.mjs pri svakom buildu
+/src/generated
+/.generated

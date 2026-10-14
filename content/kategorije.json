@@ -1,0 +1,36 @@
+{
+  "kategorije": [
+    {
+      "naziv": "Semena",
+      "slug": "semena"
+    },
+    {
+      "naziv": "Zaštita bilja",
+      "slug": "zastita-bilja"
+    },
+    {
+      "naziv": "Đubriva",
+      "slug": "djubriva"
+    },
+    {
+      "naziv": "Sadni materijal",
+      "slug": "sadni-materijal"
+    },
+    {
+      "naziv": "Hrana za životinje",
+      "slug": "hrana-za-zivotinje"
+    },
+    {
+      "naziv": "Alat i oprema",
+      "slug": "alat-i-oprema"
+    },
+    {
+      "naziv": "Navodnjavanje",
+      "slug": "navodnjavanje"
+    },
+    {
+      "naziv": "Folije i ambalaža",
+      "slug": "folije-i-ambalaza"
+    }
+  ]
+}

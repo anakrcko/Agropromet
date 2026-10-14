@@ -49,13 +49,18 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.webp",
+                "input": ".generated/slike",
+                "output": "images/proizvodi"
               }
             ],
             "styles": [
               "src/styles.scss"
             ],
             "server": "src/main.server.ts",
-            "outputMode": "static",
+            "outputMode": "static"
           },
           "configurations": {
             "production": {

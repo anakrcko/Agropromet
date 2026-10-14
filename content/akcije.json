@@ -1,0 +1,29 @@
+{
+  "sezona": "Sezona: jesen 2026.",
+  "akcije": [
+    {
+      "oznaka": "Akcija",
+      "naslov": "Jesenja setva",
+      "tekst": "Popust na seme pšenice i ječma uz veće količine. Pitajte za cenu na licu mesta.",
+      "vaziOd": "",
+      "vaziDo": "",
+      "aktivna": true
+    },
+    {
+      "oznaka": "Novo",
+      "naslov": "Baterijske prskalice",
+      "tekst": "Nova serija leđnih prskalica sa punjivom baterijom, sa garancijom.",
+      "vaziOd": "",
+      "vaziDo": "",
+      "aktivna": true
+    },
+    {
+      "oznaka": "Uskoro",
+      "naslov": "Sadnice voća",
+      "tekst": "Prijem porudžbina za jesenju sadnju je počeo. Ograničene količine po sorti.",
+      "vaziOd": "",
+      "vaziDo": "",
+      "aktivna": true
+    }
+  ]
+}

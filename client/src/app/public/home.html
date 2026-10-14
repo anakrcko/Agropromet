@@ -46,7 +46,6 @@
         width="1600"
         height="1200"
         priority
-
         alt="Radnja Agropromet u Ribaru, spolja"
       />
     </div>
@@ -55,17 +54,17 @@
   <section id="proizvodi" class="sekcija" aria-labelledby="proizvodi-naslov">
     <h2 id="proizvodi-naslov">Naša ponuda</h2>
 
-    @if (kategorije().length) {
+    @if (kategorije.length) {
       <div class="cipovi" role="group" aria-label="Filter po kategoriji">
         <button type="button" class="cip" [class.cip--aktivan]="!izabrana()" [attr.aria-pressed]="!izabrana()" (click)="izaberi(null)">
           Sve
         </button>
-        @for (k of kategorije(); track k.id) {
+        @for (k of kategorije; track k.slug) {
           <button
             type="button"
             class="cip"
-            [class.cip--aktivan]="izabrana()?.id === k.id"
-            [attr.aria-pressed]="izabrana()?.id === k.id"
+            [class.cip--aktivan]="izabrana()?.slug === k.slug"
+            [attr.aria-pressed]="izabrana()?.slug === k.slug"
             (click)="izaberi(k.slug)"
           >
             {{ k.naziv }}
@@ -77,17 +76,17 @@
     <p class="rezultat" aria-live="polite">{{ opisRezultata() }}</p>
 
     <ul class="mreza" role="list">
-      @for (p of vidljivi(); track p.id) {
+      @for (p of vidljivi(); track p.slug) {
         <li class="kartica">
           <div class="kartica__slika">
-            @if (slika(p); as src) {
-              <img [ngSrc]="src" fill [alt]="p.naziv" />
+            @if (p.slika; as slika) {
+              <img [ngSrc]="slika.url" fill [alt]="p.naziv" />
             } @else {
               <div class="kartica__placeholder" aria-hidden="true">{{ p.naziv }}</div>
             }
           </div>
           <div class="kartica__telo">
-            <p class="kartica__kategorija">{{ p.kategorija }}</p>
+            <p class="kartica__kategorija">{{ p.kategorijaNaziv }}</p>
             <h3 class="kartica__naziv">{{ p.naziv }}</h3>
             @if (p.opis) {
               <p class="kartica__opis">{{ p.opis }}</p>
@@ -107,10 +106,12 @@
     <section id="akcije" class="akcije" aria-labelledby="akcije-naslov">
       <div class="akcije__zaglavlje">
         <h2 id="akcije-naslov">Akcije i novo u ponudi</h2>
-        <p class="akcije__sezona">{{ radnja.sezonaAkcija }}</p>
+        @if (sezona) {
+          <p class="akcije__sezona">{{ sezona }}</p>
+        }
       </div>
       <ul class="akcije__mreza" role="list">
-        @for (a of akcije(); track a.id) {
+        @for (a of akcije(); track $index) {
           <li class="akcija">
             <p class="akcija__oznaka">{{ a.oznaka }}</p>
             <h3 class="akcija__naslov">{{ a.naslov }}</h3>
@@ -134,7 +135,7 @@
       </p>
       <dl class="statistike">
         <div><dt>20+</dt><dd>godina na istom mestu</dd></div>
-        <div><dt>8</dt><dd>grupa proizvoda</dd></div>
+        <div><dt>{{ kategorije.length }}</dt><dd>grupa proizvoda</dd></div>
         <div><dt>Savet</dt><dd>uz svaku kupovinu</dd></div>
       </dl>
     </div>

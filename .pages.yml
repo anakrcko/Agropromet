@@ -1,0 +1,118 @@
+# Pages CMS (https://app.pagescms.org) — admin za vlasnika radnje.
+# Svaka izmena u adminu se upisuje u ovaj repo, a Cloudflare Pages za ~1–2 minuta objavi novi sajt.
+#
+# Kategorije su u content/kategorije.json. Ako se doda ili promeni kategorija, ista vrednost (name/label)
+# mora da se doda i u listu ispod (polje „kategorija“ kod proizvoda).
+
+media:
+  input: content/slike
+  output: /slike
+  extensions: [jpg, jpeg, png, webp]
+
+content:
+  - name: proizvodi
+    label: Proizvodi
+    type: collection
+    path: content/proizvodi
+    format: json
+    filename: "{fields.naziv}.json"
+    view:
+      fields: [naziv, kategorija, aktivan]
+      primary: naziv
+      sort: [naziv, kategorija, redosled]
+      search: [naziv, opis]
+      default:
+        sort: naziv
+        order: asc
+    fields:
+      - name: naziv
+        label: Naziv
+        type: string
+        required: true
+      - name: kategorija
+        label: Kategorija
+        type: select
+        required: true
+        options:
+          values:
+            - name: semena
+              label: Semena
+            - name: zastita-bilja
+              label: Zaštita bilja
+            - name: djubriva
+              label: Đubriva
+            - name: sadni-materijal
+              label: Sadni materijal
+            - name: hrana-za-zivotinje
+              label: Hrana za životinje
+            - name: alat-i-oprema
+              label: Alat i oprema
+            - name: navodnjavanje
+              label: Navodnjavanje
+            - name: folije-i-ambalaza
+              label: Folije i ambalaža
+      - name: opis
+        label: Kratak opis (prikazuje se na kartici)
+        type: text
+      - name: slika
+        label: Slika (automatski se smanjuje i optimizuje)
+        type: image
+        options:
+          extensions: [jpg, jpeg, png, webp]
+          rename: safe
+      - name: aktivan
+        label: Prikazuj na sajtu (isključite kad proizvoda privremeno nema)
+        type: boolean
+        default: true
+      - name: istaknut
+        label: Istaknut (prikazuje se prvi u svojoj kategoriji)
+        type: boolean
+        default: false
+      - name: redosled
+        label: Redosled (manji broj = ranije u kategoriji)
+        type: number
+        default: 100
+
+  - name: akcije
+    label: Akcije i novo u ponudi
+    type: file
+    path: content/akcije.json
+    format: json
+    fields:
+      - name: sezona
+        label: Natpis sezone (npr. „Sezona: jesen 2026.“)
+        type: string
+      - name: akcije
+        label: Akcije
+        type: object
+        list: true
+        fields:
+          - name: oznaka
+            label: Oznaka
+            type: select
+            default: Akcija
+            options:
+              values: [Akcija, Novo, Uskoro]
+          - name: naslov
+            label: Naslov
+            type: string
+            required: true
+          - name: tekst
+            label: Tekst
+            type: text
+          - name: vaziOd
+            label: Važi od (prazno = odmah)
+            type: date
+            default: ""
+            options:
+              format: yyyy-MM-dd
+          - name: vaziDo
+            label: Važi do (prazno = bez kraja)
+            type: date
+            default: ""
+            options:
+              format: yyyy-MM-dd
+          - name: aktivna
+            label: Aktivna
+            type: boolean
+            default: true

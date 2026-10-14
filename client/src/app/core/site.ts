@@ -10,8 +10,6 @@ export const RADNJA = {
   drzava: 'Srbija',
   mapaUrl: 'https://www.google.com/maps/search/?api=1&query=Cara+Du%C5%A1ana+150+Ribare+Srbija',
   osnovano: 2005,
-  // TODO: tekst sezone se ručno menja kada se promene akcije.
-  sezonaAkcija: 'Sezona: jesen 2026.',
 };
 
 /** Radno vreme: [danUNedelji (0 = nedelja), od, do] u satima, po beogradskom vremenu. */
@@ -43,4 +41,9 @@ export function otvorenoSada(sada = new Date()): boolean {
   const minuti = Number(get('hour')) * 60 + Number(get('minute'));
   const vreme = RADNO_VREME[dan];
   return !!vreme && minuti >= vreme[0] * 60 && minuti < vreme[1] * 60;
+}
+
+/** Današnji datum u Beogradu kao yyyy-MM-dd (za važenje akcija). */
+export function danasUBeogradu(sada = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Belgrade' }).format(sada);
 }
