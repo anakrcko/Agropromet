@@ -7,14 +7,15 @@ import { map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import sadrzajJson from '../../generated/sadrzaj.json';
 import { Kategorija, Sadrzaj } from '../core/models';
-import { RADNJA, danasUBeogradu, otvorenoSada } from '../core/site';
+import { danasUBeogradu, otvorenoSada, saTelefonom } from '../core/site';
 
 /** Sadržaj iz /content, ugrađen u sajt tokom builda (scripts/pripremi-sadrzaj.mjs). */
 const SADRZAJ = sadrzajJson as Sadrzaj;
 
-const OPIS =
-  'Poljoprivredna apoteka Agropromet u Ribaru: semena, zaštita bilja, đubriva, sadni materijal, ' +
-  'hrana za životinje, alat i oprema. Cara Dušana 150, tel. 035 273 010.';
+const SAJT = SADRZAJ.sajt;
+const INTERVALI = SAJT.radnoVreme.termini.flatMap((t) => t.intervali);
+const DANI_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const vreme = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 
 @Component({
   selector: 'app-home',
@@ -28,7 +29,8 @@ export class Home {
   private route = inject(ActivatedRoute);
   private dokument = inject(DOCUMENT);
 
-  readonly radnja = RADNJA;
+  readonly sajt = SAJT;
+  readonly napomenaPonude = saTelefonom(SAJT.ponuda.napomena, SAJT.kontakt.telefon);
   readonly godina = new Date().getFullYear();
   readonly sezona = SADRZAJ.sezona;
   readonly kategorije = SADRZAJ.kategorije;
@@ -74,27 +76,66 @@ export class Home {
   constructor() {
     const title = inject(Title);
     const meta = inject(Meta);
-    title.setTitle('Agropromet — poljoprivredna apoteka, Ribare');
-    meta.updateTag({ name: 'description', content: OPIS });
+    const { naslov, opis } = SAJT.seo;
+    if (naslov) title.setTitle(naslov);
+    meta.updateTag({ name: 'description', content: opis });
     meta.updateTag({ property: 'og:type', content: 'website' });
     meta.updateTag({ property: 'og:locale', content: 'sr_RS' });
-    meta.updateTag({ property: 'og:title', content: 'Agropromet — poljoprivredna apoteka, Ribare' });
-    meta.updateTag({ property: 'og:description', content: OPIS });
-    meta.updateTag({ property: 'og:image', content: `${environment.siteUrl}/images/hero-radnja.jpg` });
+    meta.updateTag({ property: 'og:title', content: naslov });
+    meta.updateTag({ property: 'og:description', content: opis });
+    if (SAJT.pocetak.slika) meta.updateTag({ property: 'og:image', content: `${environment.siteUrl}${SAJT.pocetak.slika.url}` });
     meta.updateTag({ property: 'og:url', content: `${environment.siteUrl}/` });
     meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.dodajSchemaOrg();
 
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       this.hidrirano.set(true);
       const osvezi = () => {
         this.danas.set(danasUBeogradu());
-        this.otvoreno.set(otvorenoSada());
+        this.otvoreno.set(INTERVALI.length ? otvorenoSada(INTERVALI) : null);
       };
       osvezi();
       const interval = setInterval(osvezi, 60_000);
       destroyRef.onDestroy(() => clearInterval(interval));
     });
+  }
+
+  /** Schema.org Store (JSON-LD) iz istih podataka koje vidi posetilac; upisuje se u prerenderovan HTML. */
+  private dodajSchemaOrg() {
+    const id = 'schema-org-store';
+    if (this.dokument.getElementById(id)) return; // već postoji iz prerendera
+    const k = SAJT.kontakt;
+    const podaci = {
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      name: 'Agropromet',
+      description: SAJT.seo.opis,
+      url: `${environment.siteUrl}/`,
+      image: SAJT.pocetak.slika ? `${environment.siteUrl}${SAJT.pocetak.slika.url}` : undefined,
+      logo: `${environment.siteUrl}/logo.svg`,
+      telephone: k.telefonLink.replace('tel:', '') || undefined,
+      email: k.email || undefined,
+      foundingDate: '2005-12-21',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: k.ulica,
+        postalCode: k.postanskiBroj,
+        addressLocality: k.mesto,
+        addressCountry: 'RS',
+      },
+      openingHoursSpecification: INTERVALI.map((i) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: DANI_SCHEMA[i.dan],
+        opens: vreme(i.od),
+        closes: vreme(i.do),
+      })),
+    };
+    const skripta = this.dokument.createElement('script');
+    skripta.id = id;
+    skripta.type = 'application/ld+json';
+    skripta.textContent = JSON.stringify(podaci).replace(/</g, '\\u003c');
+    this.dokument.head.appendChild(skripta);
   }
 
   izaberi(slug: string | null) {

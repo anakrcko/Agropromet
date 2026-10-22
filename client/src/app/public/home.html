@@ -12,15 +12,19 @@
     <nav class="navigacija" aria-label="Glavna navigacija">
       <a href="#proizvodi">Proizvodi</a>
       <a href="#akcije" [class.sakriveno]="!akcije().length">Akcije</a>
-      <a href="#o-nama">O nama</a>
-      <a class="dugme-telefon" [href]="radnja.telefonLink">
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"
-          />
-        </svg>
-        {{ radnja.telefonPrikaz }}
-      </a>
+      @if (sajt.oNama.naslov) {
+        <a href="#o-nama">{{ sajt.oNama.naslov }}</a>
+      }
+      @if (sajt.kontakt.telefon) {
+        <a class="dugme-telefon" [href]="sajt.kontakt.telefonLink">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"
+            />
+          </svg>
+          {{ sajt.kontakt.telefon }}
+        </a>
+      }
     </nav>
   </div>
 </header>
@@ -28,31 +32,27 @@
 <main id="sadrzaj" class="kontejner">
   <section id="vrh" class="hero" aria-labelledby="hero-naslov">
     <div class="hero__tekst">
-      <p class="znacka">Poljoprivredna apoteka u Ribaru</p>
-      <h1 id="hero-naslov">Sve za njivu, baštu i<br />domaće životinje</h1>
-      <p class="hero__uvod">
-        Kod nas na jednom mestu možete pronaći semena, sredstva za zaštitu bilja, đubriva, sadni materijal i
-        opremu. <br />Od 2005. godine pružamo vam kvalitetne proizvode i stručne savete, a naša vrata su vam, kao
-        i prvog dana, uvek otvorena.
-      </p>
+      @if (sajt.pocetak.znacka) {
+        <p class="znacka">{{ sajt.pocetak.znacka }}</p>
+      }
+      <h1 id="hero-naslov" class="prelom">{{ sajt.pocetak.naslov }}</h1>
+      @if (sajt.pocetak.uvod) {
+        <p class="hero__uvod prelom">{{ sajt.pocetak.uvod }}</p>
+      }
       <div class="hero__dugmad">
         <a class="dugme dugme--primarno" href="#proizvodi">Pogledaj ponudu</a>
         <a class="dugme dugme--sekundarno" href="#kontakt">Radno vreme i adresa</a>
       </div>
     </div>
-    <div class="hero__slika">
-      <img
-        ngSrc="images/hero-radnja.jpg"
-        width="1600"
-        height="1200"
-        priority
-        alt="Radnja Agropromet u Ribaru, spolja"
-      />
-    </div>
+    @if (sajt.pocetak.slika; as slika) {
+      <div class="hero__slika">
+        <img [ngSrc]="slika.url" [width]="slika.sirina" [height]="slika.visina" priority [alt]="sajt.pocetak.opisSlike" />
+      </div>
+    }
   </section>
 
   <section id="proizvodi" class="sekcija" aria-labelledby="proizvodi-naslov">
-    <h2 id="proizvodi-naslov">Naša ponuda</h2>
+    <h2 id="proizvodi-naslov">{{ sajt.ponuda.naslov }}</h2>
 
     @if (kategorije.length) {
       <div class="cipovi" role="group" aria-label="Filter po kategoriji">
@@ -96,16 +96,23 @@
       }
     </ul>
 
-    <p class="napomena">
-      Ne vidite ono što tražite? Nazovite <a [href]="radnja.telefonLink">{{ radnja.telefonPrikaz }}</a> — asortiman
-      je širi od ovoga i naručujemo po potrebi.
-    </p>
+    @if (sajt.ponuda.napomena) {
+      <p class="napomena">
+        @for (d of napomenaPonude; track $index) {
+          @if (d.telefon) {
+            <a [href]="sajt.kontakt.telefonLink">{{ d.tekst }}</a>
+          } @else {
+            {{ d.tekst }}
+          }
+        }
+      </p>
+    }
   </section>
 
   @if (akcije().length) {
     <section id="akcije" class="akcije" aria-labelledby="akcije-naslov">
       <div class="akcije__zaglavlje">
-        <h2 id="akcije-naslov">Akcije i novo u ponudi</h2>
+        <h2 id="akcije-naslov">{{ sajt.akcije.naslov }}</h2>
         @if (sezona) {
           <p class="akcije__sezona">{{ sezona }}</p>
         }
@@ -122,31 +129,35 @@
     </section>
   }
 
-  <section id="o-nama" class="sekcija o-nama" aria-labelledby="o-nama-naslov">
-    <div class="o-nama__tekst">
-      <h2 id="o-nama-naslov">O nama</h2>
-      <p>
-        Agropromet posluje od 21. decembra 2005. godine na adresi Cara Dušana 150 u Ribaru. Počeli smo kao mala
-        apoteka za komšije i okolna sela, a danas snabdevamo i veće gazde na terenu.
-      </p>
-      <p>
-        Radimo sa proverenim dobavljačima i ne prodajemo ništa što ne bismo i sami koristili. Ako niste sigurni šta
-        vam treba, donesite list, plod ili sliku problema — pogledaćemo zajedno.
-      </p>
-      <dl class="statistike">
-        <div><dt>20+</dt><dd>godina na istom mestu</dd></div>
-        <div><dt>{{ kategorije.length }}</dt><dd>grupa proizvoda</dd></div>
-        <div><dt>Savet</dt><dd>uz svaku kupovinu</dd></div>
-      </dl>
-    </div>
-    <!-- TODO: dizajn ovde ima samo prazno mesto za fotografiju ("Slika radnje ili tima").
-         Kada fotografija postoji, zameniti ovaj blok sa <img ngSrc="images/o-nama.jpg" ...>. -->
-    <div class="o-nama__slika" aria-hidden="true">Slika radnje ili tima</div>
-  </section>
+  @if (sajt.oNama.naslov) {
+    <section id="o-nama" class="sekcija o-nama" aria-labelledby="o-nama-naslov">
+      <div class="o-nama__tekst">
+        <h2 id="o-nama-naslov">{{ sajt.oNama.naslov }}</h2>
+        @for (p of sajt.oNama.pasusi; track $index) {
+          <p>{{ p }}</p>
+        }
+        @if (sajt.oNama.statistike.length) {
+          <dl class="statistike">
+            @for (s of sajt.oNama.statistike; track $index) {
+              <div><dt>{{ s.vrednost }}</dt><dd>{{ s.opis }}</dd></div>
+            }
+          </dl>
+        }
+      </div>
+      @if (sajt.oNama.slika; as slika) {
+        <div class="o-nama__foto">
+          <img [ngSrc]="slika.url" [width]="slika.sirina" [height]="slika.visina" [alt]="sajt.oNama.opisSlike" />
+        </div>
+      } @else {
+        <!-- Slika se dodaje u Pages CMS-u: Tekstovi sajta → O nama → Slika. -->
+        <div class="o-nama__slika" aria-hidden="true">Slika radnje ili tima</div>
+      }
+    </section>
+  }
 
   <section id="kontakt" class="kontakt" aria-label="Radno vreme, kontakt i lokacija">
     <div>
-      <h2>Radno vreme</h2>
+      <h2>{{ sajt.radnoVreme.naslov }}</h2>
       @if (otvoreno() !== null) {
         <p class="status" [class.status--otvoreno]="otvoreno()">
           <span class="status__tacka" aria-hidden="true"></span>
@@ -154,33 +165,48 @@
         </p>
       }
       <dl class="radno-vreme">
-        <div><dt>Ponedeljak – Petak</dt><dd>08 – 16</dd></div>
-        <div><dt>Subota</dt><dd>08 – 14</dd></div>
-        <div><dt>Nedelja</dt><dd>08 – 11</dd></div>
+        @for (t of sajt.radnoVreme.termini; track $index) {
+          <div><dt>{{ t.dani }}</dt><dd>{{ t.vreme }}</dd></div>
+        }
       </dl>
-      <p class="kontakt__napomena">U toku sezone radnim danima radimo do 17h.</p>
+      @if (sajt.radnoVreme.napomena) {
+        <p class="kontakt__napomena">{{ sajt.radnoVreme.napomena }}</p>
+      }
     </div>
     <div>
-      <h2>Kontakt</h2>
+      <h2>{{ sajt.kontakt.naslov }}</h2>
       <address>
-        <p>{{ radnja.ulica }}<br />{{ radnja.postanskiBroj }} {{ radnja.mesto }}, {{ radnja.drzava }}</p>
-        <p><a [href]="radnja.telefonLink">{{ radnja.telefonPrikaz }}</a></p>
-        <p><a [href]="'mailto:' + radnja.email">{{ radnja.email }}</a></p>
+        <p>
+          {{ sajt.kontakt.ulica }}<br />{{ sajt.kontakt.postanskiBroj }} {{ sajt.kontakt.mesto
+          }}{{ sajt.kontakt.drzava ? ', ' + sajt.kontakt.drzava : '' }}
+        </p>
+        @if (sajt.kontakt.telefon) {
+          <p><a [href]="sajt.kontakt.telefonLink">{{ sajt.kontakt.telefon }}</a></p>
+        }
+        @if (sajt.kontakt.email) {
+          <p><a [href]="'mailto:' + sajt.kontakt.email">{{ sajt.kontakt.email }}</a></p>
+        }
       </address>
     </div>
     <div>
-      <h2>Kako do nas</h2>
-      <p>U centru Ribara, na glavnoj ulici. Parking ispred radnje, utovar iz dvorišta.</p>
-      <a class="dugme dugme--sekundarno kontakt__mapa" [href]="radnja.mapaUrl" target="_blank" rel="noopener">
-        Otvori na mapi <span class="sr-only">(otvara se u novom prozoru)</span>
-      </a>
+      <h2>{{ sajt.kakoDoNas.naslov }}</h2>
+      @if (sajt.kakoDoNas.tekst) {
+        <p>{{ sajt.kakoDoNas.tekst }}</p>
+      }
+      @if (sajt.kakoDoNas.mapa) {
+        <a class="dugme dugme--sekundarno kontakt__mapa" [href]="sajt.kakoDoNas.mapa" target="_blank" rel="noopener">
+          {{ sajt.kakoDoNas.dugmeMapa || 'Otvori na mapi' }} <span class="sr-only">(otvara se u novom prozoru)</span>
+        </a>
+      }
     </div>
   </section>
 </main>
 
 <footer class="podnozje">
   <div class="kontejner podnozje__red">
-    <p>© {{ godina }} Agropromet, Ribare</p>
-    <p>Poljoprivredna apoteka · osnovano 2005.</p>
+    <p>© {{ godina }} {{ sajt.podnozje.levo }}</p>
+    @if (sajt.podnozje.desno) {
+      <p>{{ sajt.podnozje.desno }}</p>
+    }
   </div>
 </footer>

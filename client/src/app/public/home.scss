@@ -571,3 +571,16 @@ h2 {
   font-size: 14.5px;
   color: var(--tekst-priguseni-na-pozadini);
 }
+
+/* Prelom reda (Enter) u tekstovima iz Pages CMS-a se prikazuje kao novi red. */
+.prelom {
+  white-space: pre-line;
+}
+
+.o-nama__foto img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-veliki);
+}

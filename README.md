@@ -45,6 +45,7 @@ Posle izmene u `content/` lokalno, ponovo pokrenuti `npm start`.
 | `content/proizvodi/*.json` | jedan fajl po proizvodu: `naziv`, `kategorija` (slug), `opis`, `slika`, `aktivan`, `istaknut`, `redosled` |
 | `content/kategorije.json` | kategorije (filteri) — redosled u fajlu je redosled na sajtu |
 | `content/akcije.json` | natpis sezone i lista akcija (`oznaka` Akcija/Novo/Uskoro, `naslov`, `tekst`, `vaziOd`, `vaziDo`, `aktivna`) |
+| `content/sajt.json` | svi ostali tekstovi stranice: početak i velika fotografija, naslovi sekcija, „O nama“ (tekst, brojke, fotografija), radno vreme, kontakt, „Kako do nas“, podnožje, naslov i opis za Google |
 | `content/slike/` | originalne slike koje vlasnik otpremi (na sajt idu optimizovane kopije) |
 
 - Proizvod sa `aktivan: false` se ne prikazuje (ne treba ga brisati kad ga privremeno nema).
@@ -68,6 +69,12 @@ Posle izmene u `content/` lokalno, ponovo pokrenuti `npm start`.
 
 **Akcije:** **Akcije i novo u ponudi** → dodati stavku u listu, popuniti oznaku, naslov, tekst i datume → **Save**.
 Kada nijedna akcija ne važi, zeleni blok na sajtu se ne prikazuje.
+
+**Ostali tekstovi i fotografije:** **Tekstovi sajta** → izabrati deo (Početak strane, O nama, Radno vreme, Kontakt…) → izmeniti → **Save**.
+- U dužim tekstovima Enter pravi novi red, a prazan red novi pasus.
+- Broj telefona upisan u napomenu ispod proizvoda sam postaje link za poziv.
+- Kod radnog vremena: „Od“/„Do“ se upisuju kao `08` ili `08:30`, a u „Dani na koje se odnosi“ se štikliraju dani — po tome sajt prikazuje „Sada otvoreno/zatvoreno“.
+- Ako se polje isprazni, taj deo se ne prikazuje na sajtu.
 
 ---
 
@@ -122,10 +129,10 @@ Kada nijedna akcija ne važi, zeleni blok na sajtu se ne prikazuje.
   terakota za tekst i dugmad `#A5502F` (umesto `#B85C38`), prigušeni tekst na bež pozadini `#6E675A`, oznaka kategorije `#6F6346`, oznaka akcije `#EBBE9A`.
   Sve boje su na jednom mestu: `client/src/styles.scss`.
 - **Telefon link** je `tel:+38135273010` (u dizajnu je bilo `+381035…`, što nije ispravan međunarodni format).
-- **Podaci o radnji** (adresa, telefon, radno vreme) su u `client/src/app/core/site.ts` i u JSON-LD bloku u `client/src/index.html`.
+- **Podaci o radnji** (adresa, telefon, radno vreme) su u `content/sajt.json`; iz njih se pri buildu pravi i Schema.org (JSON-LD) za Google.
 
 ### Šta još fali (TODO)
-- Fotografija za sekciju „O nama“ — u dizajnu je samo prazno mesto (`client/src/app/public/home.html`).
-- Tačni datumi sezone kada se radi do 17h — indikator „Sada otvoreno“ koristi redovno radno vreme (`client/src/app/core/site.ts`).
+- Fotografija za sekciju „O nama“ — dodaje se kroz admin (Tekstovi sajta → O nama → Fotografija).
+- Tačni datumi sezone kada se radi do 17h — kada sezona počne, vlasnik menja „Do“ u radnom vremenu (Tekstovi sajta → Radno vreme).
 - Datumi važenja početnih akcija (sada su bez ograničenja) — vlasnik ih postavlja kroz admin.
 - Slike proizvoda — vlasnik ih dodaje kroz admin.

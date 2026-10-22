@@ -58,7 +58,7 @@ function izvorSlike(vrednost) {
   return rel ? join(SADRZAJ, 'slike', rel) : null;
 }
 
-async function obradiSliku(vrednost, ime) {
+async function obradiSliku(vrednost, ime, maxDimenzija = MAX_DIMENZIJA) {
   const izvor = izvorSlike(vrednost);
   if (!izvor) return null;
   if (!existsSync(izvor)) {
@@ -71,7 +71,7 @@ async function obradiSliku(vrednost, ime) {
   try {
     const { width, height } = await sharp(bajtovi)
       .rotate() // orijentacija sa telefona (EXIF)
-      .resize(MAX_DIMENZIJA, MAX_DIMENZIJA, { fit: 'inside', withoutEnlargement: true })
+      .resize(maxDimenzija, maxDimenzija, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 80 }) // EXIF i ostali metapodaci se ne prenose
       .toFile(join(IZLAZ_SLIKE, fajl));
     return { url: `${URL_SLIKA}/${fajl}`, sirina: width, visina: height };
@@ -79,6 +79,93 @@ async function obradiSliku(vrednost, ime) {
     upozori(`Slika „${tekst(vrednost)}“ (${ime}) nije mogla da se obradi (${e.message}) — prikazuje se bez slike.`);
     return null;
   }
+}
+
+const DANI = { ned: 0, pon: 1, uto: 2, sre: 3, cet: 4, pet: 5, sub: 6 };
+
+/** "08", "8", "08:30", "8.30", "08h" → minuti od ponoći; null ako nije vreme. */
+function minuti(v) {
+  const m = tekst(v).match(/^(\d{1,2})(?:[:.](\d{2}))?\s*h?$/i);
+  if (!m || Number(m[1]) > 24 || Number(m[2] ?? 0) > 59) return null;
+  return Number(m[1]) * 60 + Number(m[2] ?? 0);
+}
+
+/** "035 273 010" → "tel:+38135273010" */
+function telefonLink(prikaz) {
+  let cifre = tekst(prikaz).replace(/[^\d+]/g, '');
+  if (cifre.startsWith('+')) return `tel:${cifre}`;
+  if (cifre.startsWith('00')) return `tel:+${cifre.slice(2)}`;
+  if (cifre.startsWith('381')) return `tel:+${cifre}`;
+  if (cifre.startsWith('0')) cifre = cifre.slice(1);
+  return cifre ? `tel:+381${cifre}` : '';
+}
+
+/** Tekstovi stranice (content/sajt.json). Prazno polje = taj deo se ne prikazuje. */
+async function pripremiSajt(s) {
+  const o = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+  const lista = (v) => (Array.isArray(v) ? v : []);
+  const t = (obj, kljuc) => tekst(o(obj)[kljuc]);
+
+  const pocetak = o(s.pocetak);
+  const oNama = o(s.oNama);
+  const radnoVreme = o(s.radnoVreme);
+  const kontakt = o(s.kontakt);
+
+  const termini = lista(radnoVreme.termini)
+    .map((r) => {
+      const od = minuti(r?.od);
+      const doV = minuti(r?.do);
+      const dani = lista(r?.uDanima).map((d) => DANI[tekst(d)]).filter((d) => d !== undefined);
+      if (tekst(r?.dani) && (od === null || doV === null))
+        upozori(`Radno vreme „${tekst(r?.dani)}“: vreme mora biti npr. 08 ili 08:30 — oznaka „Sada otvoreno“ ga ne računa.`);
+      return {
+        dani: tekst(r?.dani),
+        vreme: tekst(r?.od) && tekst(r?.do) ? `${tekst(r.od)} – ${tekst(r.do)}` : '',
+        // Za oznaku „Sada otvoreno/zatvoreno“.
+        intervali: od !== null && doV !== null ? dani.map((dan) => ({ dan, od, do: doV })) : [],
+      };
+    })
+    .filter((r) => r.dani);
+
+  return {
+    seo: { naslov: t(s.seo, 'naslov'), opis: t(s.seo, 'opis') },
+    pocetak: {
+      znacka: t(pocetak, 'znacka'),
+      naslov: t(pocetak, 'naslov'),
+      uvod: t(pocetak, 'uvod'),
+      slika: await obradiSliku(pocetak.slika, 'pocetna', 1600),
+      opisSlike: t(pocetak, 'opisSlike'),
+    },
+    ponuda: { naslov: t(s.ponuda, 'naslov'), napomena: t(s.ponuda, 'napomena') },
+    akcije: { naslov: t(s.akcije, 'naslov') },
+    oNama: {
+      naslov: t(oNama, 'naslov'),
+      pasusi: t(oNama, 'tekst').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
+      statistike: lista(oNama.statistike)
+        .map((x) => ({ vrednost: tekst(x?.vrednost), opis: tekst(x?.opis) }))
+        .filter((x) => x.vrednost || x.opis),
+      slika: await obradiSliku(oNama.slika, 'o-nama'),
+      opisSlike: t(oNama, 'opisSlike'),
+    },
+    radnoVreme: { naslov: t(radnoVreme, 'naslov'), termini, napomena: t(radnoVreme, 'napomena') },
+    kontakt: {
+      naslov: t(kontakt, 'naslov'),
+      ulica: t(kontakt, 'ulica'),
+      postanskiBroj: t(kontakt, 'postanskiBroj'),
+      mesto: t(kontakt, 'mesto'),
+      drzava: t(kontakt, 'drzava'),
+      telefon: t(kontakt, 'telefon'),
+      telefonLink: telefonLink(kontakt.telefon),
+      email: t(kontakt, 'email'),
+    },
+    kakoDoNas: {
+      naslov: t(s.kakoDoNas, 'naslov'),
+      tekst: t(s.kakoDoNas, 'tekst'),
+      mapa: t(s.kakoDoNas, 'mapa'),
+      dugmeMapa: t(s.kakoDoNas, 'dugmeMapa'),
+    },
+    podnozje: { levo: t(s.podnozje, 'levo'), desno: t(s.podnozje, 'desno') },
+  };
 }
 
 async function main() {
@@ -142,8 +229,10 @@ async function main() {
       return { oznaka, naslov: tekst(a.naslov), tekst: tekst(a.tekst), vaziOd: datum(a.vaziOd), vaziDo: datum(a.vaziDo) };
     });
 
+  const sajt = await pripremiSajt(citajJson(join(SADRZAJ, 'sajt.json')) ?? {});
+
   const generisano = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Belgrade' }).format(new Date());
-  const podaci = { generisano, sezona: tekst(akcijeFajl.sezona), kategorije, proizvodi, akcije };
+  const podaci = { generisano, sezona: tekst(akcijeFajl.sezona), sajt, kategorije, proizvodi, akcije };
   writeFileSync(IZLAZ_PODACI, JSON.stringify(podaci, null, 2) + '\n');
 
   const saSlikom = proizvodi.filter((p) => p.slika).length;

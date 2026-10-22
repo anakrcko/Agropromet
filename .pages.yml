@@ -80,7 +80,7 @@ content:
     format: json
     fields:
       - name: sezona
-        label: Natpis sezone (npr. „Sezona: jesen 2026.“)
+        label: "Natpis sezone (npr. „Sezona: jesen 2026.“)"
         type: string
       - name: akcije
         label: Akcije
@@ -116,3 +116,192 @@ content:
             label: Aktivna
             type: boolean
             default: true
+
+  - name: sajt
+    label: Tekstovi sajta
+    type: file
+    path: content/sajt.json
+    format: json
+    fields:
+      - name: pocetak
+        label: Početak strane
+        type: object
+        fields:
+          - name: znacka
+            label: Natpis iznad naslova
+            type: string
+          - name: naslov
+            label: Glavni naslov (Enter = novi red)
+            type: text
+          - name: uvod
+            label: Uvodni tekst (Enter = novi red)
+            type: text
+          - name: slika
+            label: Velika fotografija
+            type: image
+            options:
+              extensions: [jpg, jpeg, png, webp]
+              rename: safe
+          - name: opisSlike
+            label: Opis fotografije (za slabovide i Google)
+            type: string
+
+      - name: ponuda
+        label: Naša ponuda
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov sekcije
+            type: string
+          - name: napomena
+            label: Napomena ispod proizvoda (broj telefona postaje link sam)
+            type: text
+
+      - name: akcije
+        label: Akcije
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov sekcije
+            type: string
+
+      - name: oNama
+        label: O nama
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov sekcije
+            type: string
+          - name: tekst
+            label: Tekst (prazan red = novi pasus)
+            type: text
+          - name: statistike
+            label: Brojke (npr. „20+“ / „godina na istom mestu“)
+            type: object
+            list: true
+            fields:
+              - name: vrednost
+                label: Vrednost
+                type: string
+              - name: opis
+                label: Opis
+                type: string
+          - name: slika
+            label: Fotografija radnje ili tima
+            type: image
+            options:
+              extensions: [jpg, jpeg, png, webp]
+              rename: safe
+          - name: opisSlike
+            label: Opis fotografije (za slabovide i Google)
+            type: string
+
+      - name: radnoVreme
+        label: Radno vreme
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov
+            type: string
+          - name: termini
+            label: Termini
+            type: object
+            list: true
+            fields:
+              - name: dani
+                label: Prikaz dana (npr. „Ponedeljak – Petak“)
+                type: string
+              - name: od
+                label: Od (npr. 08 ili 08:30)
+                type: string
+              - name: do
+                label: Do (npr. 16 ili 16:30)
+                type: string
+              - name: uDanima
+                label: Dani na koje se odnosi (za oznaku „Sada otvoreno“)
+                type: select
+                options:
+                  multiple: true
+                  values:
+                    - name: pon
+                      label: Ponedeljak
+                    - name: uto
+                      label: Utorak
+                    - name: sre
+                      label: Sreda
+                    - name: cet
+                      label: Četvrtak
+                    - name: pet
+                      label: Petak
+                    - name: sub
+                      label: Subota
+                    - name: ned
+                      label: Nedelja
+          - name: napomena
+            label: Napomena ispod radnog vremena
+            type: text
+
+      - name: kontakt
+        label: Kontakt
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov
+            type: string
+          - name: ulica
+            label: Ulica i broj
+            type: string
+          - name: postanskiBroj
+            label: Poštanski broj
+            type: string
+          - name: mesto
+            label: Mesto
+            type: string
+          - name: drzava
+            label: Država
+            type: string
+          - name: telefon
+            label: Telefon (kako se prikazuje, npr. 035 273 010)
+            type: string
+          - name: email
+            label: E-mail
+            type: string
+
+      - name: kakoDoNas
+        label: Kako do nas
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov
+            type: string
+          - name: tekst
+            label: Tekst
+            type: text
+          - name: mapa
+            label: Link ka Google mapi
+            type: string
+          - name: dugmeMapa
+            label: Tekst dugmeta
+            type: string
+
+      - name: podnozje
+        label: Podnožje strane
+        type: object
+        fields:
+          - name: levo
+            label: Levo (posle „© godina“)
+            type: string
+          - name: desno
+            label: Desno
+            type: string
+
+      - name: seo
+        label: Google (naslov i opis u rezultatima pretrage)
+        type: object
+        fields:
+          - name: naslov
+            label: Naslov stranice
+            type: string
+          - name: opis
+            label: Opis (do ~160 znakova)
+            type: text
