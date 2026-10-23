@@ -1,8 +1,4 @@
 {
-  "seo": {
-    "naslov": "Agropromet — poljoprivredna apoteka, Ribare",
-    "opis": "Poljoprivredna apoteka Agropromet u Ribaru: semena, zaštita bilja, đubriva, sadni materijal, hrana za životinje, alat i oprema. Cara Dušana 150, tel. 035 273 010."
-  },
   "pocetak": {
     "znacka": "Poljoprivredna apoteka u Ribaru",
     "naslov": "Sve za njivu, baštu i\ndomaće životinje",
@@ -21,19 +17,51 @@
     "naslov": "O nama",
     "tekst": "Agropromet posluje od 21. decembra 2005. godine na adresi Cara Dušana 150 u Ribaru. Počeli smo kao mala apoteka za komšije i okolna sela, a danas snabdevamo i veće gazde na terenu.\n\nRadimo sa proverenim dobavljačima i ne prodajemo ništa što ne bismo i sami koristili. Ako niste sigurni šta vam treba, donesite list, plod ili sliku problema — pogledaćemo zajedno.",
     "statistike": [
-      { "vrednost": "20+", "opis": "godina na istom mestu" },
-      { "vrednost": "8", "opis": "grupa proizvoda" },
-      { "vrednost": "Savet", "opis": "uz svaku kupovinu" }
-    ],
-    "slika": "",
-    "opisSlike": ""
+      {
+        "vrednost": "20+",
+        "opis": "godina na istom mestu"
+      },
+      {
+        "vrednost": "8",
+        "opis": "grupa proizvoda"
+      },
+      {
+        "vrednost": "Savet",
+        "opis": "uz svaku kupovinu"
+      }
+    ]
   },
   "radnoVreme": {
     "naslov": "Radno vreme",
     "termini": [
-      { "dani": "Ponedeljak – Petak", "od": "08", "do": "16", "uDanima": ["pon", "uto", "sre", "cet", "pet"] },
-      { "dani": "Subota", "od": "08", "do": "14", "uDanima": ["sub"] },
-      { "dani": "Nedelja", "od": "08", "do": "11", "uDanima": ["ned"] }
+      {
+        "dani": "Ponedeljak – Petak",
+        "od": "08",
+        "do": "16",
+        "uDanima": [
+          "pon",
+          "uto",
+          "sre",
+          "cet",
+          "pet"
+        ]
+      },
+      {
+        "dani": "Subota",
+        "od": "08",
+        "do": "14",
+        "uDanima": [
+          "sub"
+        ]
+      },
+      {
+        "dani": "Nedelja",
+        "od": "08",
+        "do": "11",
+        "uDanima": [
+          "ned"
+        ]
+      }
     ],
     "napomena": "U toku sezone radnim danima radimo do 17h."
   },
@@ -48,12 +76,16 @@
   },
   "kakoDoNas": {
     "naslov": "Kako do nas",
-    "tekst": "U centru Ribara, na glavnoj ulici. Parking ispred radnje, utovar iz dvorišta.",
+    "tekst": "U centru Ribara, na glavnoj ulici. Parking dostupan ispred radnje.",
     "mapa": "https://www.google.com/maps/search/?api=1&query=Cara+Du%C5%A1ana+150+Ribare+Srbija",
     "dugmeMapa": "Otvori na mapi"
   },
   "podnozje": {
     "levo": "Agropromet, Ribare",
     "desno": "Poljoprivredna apoteka · osnovano 2005."
+  },
+  "seo": {
+    "naslov": "Agropromet — poljoprivredna apoteka, Ribare",
+    "opis": "Poljoprivredna apoteka Agropromet u Ribaru: semena, zaštita bilja, đubriva, sadni materijal, hrana za životinje, alat i oprema. Cara Dušana 150, tel. 035 273 010."
   }
 }
