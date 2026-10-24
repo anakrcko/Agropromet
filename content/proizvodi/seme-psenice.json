@@ -2,7 +2,7 @@
   "naziv": "Seme pšenice",
   "kategorija": "semena",
   "opis": "Sortno seme, deklarisano.",
-  "slika": "",
+  "slika": "/slike/wheat.jpg",
   "aktivan": true,
   "istaknut": false,
   "redosled": 20
