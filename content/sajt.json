@@ -29,7 +29,8 @@
         "vrednost": "Savet",
         "opis": "uz svaku kupovinu"
       }
-    ]
+    ],
+    "slika": "/slike/sam1812.jpg"
   },
   "radnoVreme": {
     "naslov": "Radno vreme",
