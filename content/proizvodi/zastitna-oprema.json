@@ -2,7 +2,7 @@
   "naziv": "Zaštitna oprema",
   "kategorija": "alat-i-oprema",
   "opis": "Maske, rukavice, kombinezoni.",
-  "slika": "",
+  "slika": "/slike/oprema.png",
   "aktivan": true,
   "istaknut": false,
   "redosled": 200
