@@ -2,7 +2,7 @@
   "naziv": "Fungicidi",
   "kategorija": "zastita-bilja",
   "opis": "Zaštita voća, vinograda i povrća.",
-  "slika": "",
+  "slika": "/slike/fungicidi.png",
   "aktivan": true,
   "istaknut": false,
   "redosled": 60
