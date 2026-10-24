@@ -2,7 +2,7 @@
   "naziv": "Herbicidi",
   "kategorija": "zastita-bilja",
   "opis": "Za strna žita, kukuruz i suncokret.",
-  "slika": "",
+  "slika": "/slike/herb-traktor.png",
   "aktivan": true,
   "istaknut": false,
   "redosled": 50
